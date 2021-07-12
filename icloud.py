@@ -4,32 +4,54 @@ import sys
 import secret
 from time import sleep
 import datetime
+import asyncio
+from aiohttp import ClientSession
+import pymyq
 
+table = {} # this var stores who is home and who isn't
+shouldOpen = False
+shouldClose = False
+
+async def garage() -> None:
+    global shouldClose, shouldOpen
+    """Create the aiohttp session and run."""
+    async with ClientSession() as websession:
+      myq = await pymyq.login(secret.garage['email'], secret.garage['password'], websession)
+      
+      if shouldOpen:
+        await list(myq.covers.items())[0][1].open()
+        shouldOpen = False
+
+      if shouldClose:
+        await list(myq.covers.items())[0][1].close()
+        shouldClose = False
 
 def main():
-    api = login(secret.sebastian)
-    sebastianLoc = getLocation(api, secret.sebastian)
-    sebastianLoc = (sebastianLoc['latitude'], sebastianLoc['longitude'])
-    print(sebastianLoc)
+    global shouldClose, shouldOpen
+    asyncio.get_event_loop().run_until_complete(garage())
+    for user in secret.users:
+        api = login(secret.users[user])
+        loc = getLocation(api, secret.users[user])
+        loc = (loc['latitude'], loc['longitude'])
 
-    # api = login(secret.victoria)
-    # victoriaLoc = getLocation(api, secret.victoria)
-    # victoriaLoc = (victoriaLoc['latitude'], victoriaLoc['longitude'])
-
-    # api = login(secret.mom)
-    # momLoc = getLocation(api, secret.mom)
-    # momLoc = (momLoc['latitude'], momLoc['longitude'])
-
-    print("sebastian's distance", getDist(sebastianLoc).m)
-    # print("victoia's distance", getDist(victoriaLoc).m)
-    # print("mom's distance", getDist(momLoc).m)
-    print()
+        isHome = True if (getDist(loc) < 50) else False
+        
+        # print(user, "is home:", isHome, '\n')
+        if table[user] != isHome:
+            print(datetime.datetime.now())
+            table[user] = isHome
+            if isHome:
+                print(user, 'arived home')
+                shouldOpen = True
+            else:
+                print(user, 'left home')
+                shouldClose = True
+    
 
 def getDist(loc):
     homeCoords = (42.9291606, -78.655094)
     dist = distance.distance(homeCoords, loc)
-    return dist
-
+    return dist.m
 
 def getLocation(api, user):
     devices = api.devices
@@ -39,11 +61,10 @@ def getLocation(api, user):
             while True:
                 # print('checking location accuracy')
                 if not location['isInaccurate'] and not location['isOld'] and location['locationFinished']:
-                    print(datetime.datetime.now())
-                    print('location accurate')
+                    # print('location accurate')
                     return location
                 else:
-                    print("location inaccurate, checking again")
+                    # print("location inaccurate, checking again")
                     location = devices[device].location()
             
 
@@ -82,6 +103,8 @@ def login(user):
     return api
 
 if __name__ == '__main__':
+    for user in secret.users:
+        table[user] = True
     while True:
         main()
         sleep(5)
