@@ -13,3 +13,8 @@ mom = {
     "password": "Oliver101010",
     "deviceId": "dYgDxjNDw6Dm2Na2W3W8b5cD4J0OTpG2i7mxiFvihSk="
 }
+
+garage = {
+    "email": "sebastianrichel18@gmail.com",
+    "password": "Oliver101010"
+}
