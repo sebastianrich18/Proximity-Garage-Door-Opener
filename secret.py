@@ -3,7 +3,8 @@ users = {
         "email": "ICLOUD-EMAIL",
         "password": "ICLOUD-PASSWORD",
         "deviceId": "DEVICE_ID"
-    }    "sebastian": {
+    },
+    "victoria": {
         "email": "ICLOUD-EMAIL",
         "password": "ICLOUD-PASSWORD",
         "deviceId": "DEVICE_ID"
