@@ -3,24 +3,26 @@ from geopy import distance
 import sys
 import secret
 from time import sleep
+import datetime
 
 
 def main():
     api = login(secret.sebastian)
     sebastianLoc = getLocation(api, secret.sebastian)
     sebastianLoc = (sebastianLoc['latitude'], sebastianLoc['longitude'])
+    print(sebastianLoc)
 
-    api = login(secret.victoria)
-    victoriaLoc = getLocation(api, secret.victoria)
-    victoriaLoc = (victoriaLoc['latitude'], victoriaLoc['longitude'])
+    # api = login(secret.victoria)
+    # victoriaLoc = getLocation(api, secret.victoria)
+    # victoriaLoc = (victoriaLoc['latitude'], victoriaLoc['longitude'])
 
-    api = login(secret.mom)
-    momLoc = getLocation(api, secret.mom)
-    momLoc = (momLoc['latitude'], momLoc['longitude'])
+    # api = login(secret.mom)
+    # momLoc = getLocation(api, secret.mom)
+    # momLoc = (momLoc['latitude'], momLoc['longitude'])
 
     print("sebastian's distance", getDist(sebastianLoc).m)
-    print("victoia's distance", getDist(victoriaLoc).m)
-    print("mom's distance", getDist(momLoc).m)
+    # print("victoia's distance", getDist(victoriaLoc).m)
+    # print("mom's distance", getDist(momLoc).m)
     print()
 
 def getDist(loc):
@@ -31,10 +33,19 @@ def getDist(loc):
 
 def getLocation(api, user):
     devices = api.devices
-    # print(devices)
     for device in devices.keys():
         if device == user['deviceId']:
-            return devices[device].location()
+            location = devices[device].location()
+            while True:
+                # print('checking location accuracy')
+                if not location['isInaccurate'] and not location['isOld'] and location['locationFinished']:
+                    print(datetime.datetime.now())
+                    print('location accurate')
+                    return location
+                else:
+                    print("location inaccurate, checking again")
+                    location = devices[device].location()
+            
 
 def login(user):
     api = PyiCloudService(user['email'], password=user['password'])   
@@ -73,4 +84,4 @@ def login(user):
 if __name__ == '__main__':
     while True:
         main()
-        sleep(15)
+        sleep(5)
